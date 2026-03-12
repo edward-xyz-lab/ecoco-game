@@ -54,6 +54,7 @@ class _GameMapScreenState extends ConsumerState<GameMapScreen> {
     final monsters = monstersAsync.valueOrNull ?? [];
 
     return Stack(
+      fit: StackFit.expand,
       children: [
         // Map layer — web 用假地圖，mobile 用 GoogleMap
         if (kIsWeb)
@@ -195,6 +196,7 @@ class _MockMapState extends State<_MockMap> with SingleTickerProviderStateMixin 
     return Container(
       decoration: const BoxDecoration(color: Color(0xFF0A1628)),
       child: Stack(
+        fit: StackFit.expand,
         children: [
           // Grid background — simulate map tiles
           CustomPaint(

@@ -1,0 +1,22 @@
+# Flutter
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/pubspec.lock
+**/*.freezed.dart
+**/*.g.dart
+
+# Node.js
+backend/node_modules/
+backend/dist/
+backend/.env
+backend/prisma/migrations/
+
+# macOS
+.DS_Store
+
+# Secrets
+**/.env
+*.pem
