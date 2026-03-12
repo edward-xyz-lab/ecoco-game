@@ -1,0 +1,89 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  FLUTTER_VERSION: "3.41.4"
+  FLUTTER_CHANNEL: stable
+
+# ── Flutter Web Build ──────────────────────────────────────────────────────────
+build:flutter-web:
+  stage: build
+  image: cirrusci/flutter:latest
+  cache:
+    key: flutter-pub-$CI_COMMIT_REF_SLUG
+    paths:
+      - ecoco_game/.pub-cache/
+      - ecoco_game/.dart_tool/
+  before_script:
+    - cd ecoco_game
+    - flutter pub get
+  script:
+    - dart run build_runner build --delete-conflicting-outputs
+    - flutter build web --release
+        --dart-define=BASE_URL=$BACKEND_URL/api
+        --dart-define=WS_URL=$BACKEND_URL
+  artifacts:
+    paths:
+      - ecoco_game/build/web/
+    expire_in: 1 hour
+  only:
+    - main
+
+# ── Deploy Flutter Web → Netlify ───────────────────────────────────────────────
+deploy:netlify:
+  stage: deploy
+  image: node:20-alpine
+  needs: [build:flutter-web]
+  before_script:
+    - npm install -g netlify-cli
+  script:
+    - netlify deploy
+        --dir=ecoco_game/build/web
+        --site=$NETLIFY_SITE_ID
+        --auth=$NETLIFY_TOKEN
+        --prod
+        --message="GitLab CI - $CI_COMMIT_SHORT_SHA"
+  environment:
+    name: production
+    url: https://ecoco-game.netlify.app
+  only:
+    - main
+
+# ── Backend Build Check ────────────────────────────────────────────────────────
+build:backend:
+  stage: build
+  image: node:20-alpine
+  cache:
+    key: backend-node-$CI_COMMIT_REF_SLUG
+    paths:
+      - backend/node_modules/
+  before_script:
+    - cd backend
+    - npm ci
+  script:
+    - npx prisma generate
+    - npm run build
+  artifacts:
+    paths:
+      - backend/dist/
+    expire_in: 1 hour
+  only:
+    - main
+
+# ── Deploy Backend → Render (webhook trigger) ──────────────────────────────────
+deploy:render:
+  stage: deploy
+  image: alpine/curl:latest
+  needs: [build:backend]
+  script:
+    # Render deploy hook — 在 Render dashboard 取得 webhook URL
+    - |
+      if [ -n "$RENDER_DEPLOY_HOOK" ]; then
+        curl -s -X POST "$RENDER_DEPLOY_HOOK" | grep -o '"id":"[^"]*"'
+        echo "Render deploy triggered"
+      else
+        echo "RENDER_DEPLOY_HOOK not set, skipping"
+      fi
+  only:
+    - main
