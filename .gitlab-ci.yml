@@ -1,6 +1,19 @@
 stages:
+  - mirror
   - build
   - deploy
+
+# ── Mirror GitLab → GitHub（讓 Render 能拉到最新代碼）───────────────────────────
+mirror:github:
+  stage: mirror
+  image: alpine/git:latest
+  script:
+    - git config --global user.email "ci@ecoco.xyz"
+    - git config --global user.name "GitLab CI"
+    - git remote add github https://$GITHUB_TOKEN@github.com/edward-xyz-lab/ecoco-game.git
+    - git push github HEAD:main --force
+  only:
+    - main
 
 variables:
   FLUTTER_VERSION: "3.41.4"
