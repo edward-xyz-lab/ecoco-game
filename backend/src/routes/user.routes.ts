@@ -6,12 +6,12 @@ export const userRouter = Router();
 userRouter.use(authMiddleware);
 
 userRouter.get('/me', async (req: AuthRequest, res) => {
-  const user = await prisma.user.findUnique({
+  const raw = await prisma.user.findUnique({
     where: { id: req.userId },
     include: { character: true },
-    omit: { passwordHash: true },
   });
-  if (!user) return res.status(404).json({ error: 'User not found' });
+  if (!raw) return res.status(404).json({ error: 'User not found' });
+  const { passwordHash: _, ...user } = raw;
   res.json(user);
 });
 

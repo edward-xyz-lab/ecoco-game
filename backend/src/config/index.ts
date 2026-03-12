@@ -12,7 +12,8 @@ export const config = {
   },
 
   redis: {
-    url: process.env.REDIS_URL || 'redis://localhost:6379',
+    // 空字串 = 使用 in-memory fallback
+    url: process.env.REDIS_URL || '',
   },
 
   game: {

@@ -524,7 +524,7 @@ setupBattleSocket(io);
 
 // Startup
 async function main() {
-  await redis.connect();
+  await (redis as { connect: () => Promise<void> }).connect();
   await prisma.$connect();
 
   httpServer.listen(config.port, () => {
